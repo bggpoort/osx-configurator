@@ -25,8 +25,8 @@ brew update
 echo "Installing Iterm2"
 brew install --cask iterm2
 
-# Update the Terminal
 # Install oh-my-zsh
+# TODO: This spawns a new ZSH which you need to exit before the script continues.
 echo "Installing oh-my-zsh..."
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
@@ -91,6 +91,7 @@ echo 'export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources
 #source ~/.zshrc
 
 # Install Visual Studio Code extension
+# TODO: Extensions weren't installed.
 EXTENSIONS=(
     vscodevim.vim
     eamodio.gitlens
@@ -106,6 +107,7 @@ while IFS= read -r line; do
 done <<< "$EXTENSIONS"
 
 # OSX modifications
+# TODO: Some of these need more work
 echo "Applying OSX modifications"
 
 # Setting Dock to auto-hide and removing the auto-hiding delay
@@ -150,6 +152,7 @@ defaults write com.apple.screensaver askForPasswordDelay 5
 
 # Default apps I want to have in my Dock. I might consider just using Dockutil for this at a later moment
 # https://github.com/kcrawford/dockutil
+# TODO: Dock seems not to be modified
 defaults delete com.apple.dock persistent-apps
 defaults delete com.apple.dock recent-apps
 defaults delete com.apple.dock persistent-others
@@ -187,6 +190,9 @@ echo "source ~/.aliases" >> ~/.zshrc
 
 # Enable kubectl autocompletion
 echo "source <(kubectl completion zsh)" >> ~/.zshrc
+
+# Enable Gcloud autocompletion
+echo "source /opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" >> ~/.zshrc
 
 # Enable ZSH autosuggestions and autocompletion
 echo "source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh" >> ~/.zshrc
