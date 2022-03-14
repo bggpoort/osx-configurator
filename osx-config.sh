@@ -10,12 +10,12 @@ if test ! $(which xcode-select); then
 fi
 
 # Check for Homebrew to be present, install if it's missing
-if test ! $(which brew); then
+if [ ! -d /opt/homebrew ]; then
     echo "Installing homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' > ~/.zprofile
+    # We want Brew to be available during the rest of the installation process as well
     eval "$(/opt/homebrew/bin/brew shellenv)"
-    #source ~/.zprofile
 fi
 
 # Update Brew
@@ -106,7 +106,7 @@ EXTENSIONS=(
 # Visual Studio Code can't handle all extensions at once so we'll iterate over them one by one
 echo "Installing Visual Studio Code extensions"
 for extension in "${EXTENSIONS[@]}"; do
-    code --install-extension --force "$extension"
+    code --install-extension "$extension"
 done
 
 # OSX modifications
@@ -153,6 +153,8 @@ defaults write com.apple.dock mru-spaces -bool false
 # Require password when ending screen saver after 5 seconds
 defaults write com.apple.screensaver askForPassword 1
 defaults write com.apple.screensaver askForPasswordDelay 5
+
+echo "Applying changes to Dock"
 
 # Remove everything from dock
 dockutil --remove all
