@@ -26,13 +26,16 @@ echo "Installing Iterm2"
 brew install --cask iterm2
 
 # Install oh-my-zsh
-# TODO: This spawns a new ZSH which you need to exit before the script continues.
-echo "Installing oh-my-zsh..."
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+if [ ! -d ~/.oh-my-zsh ]; then
+    echo "Installing oh-my-zsh..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+    # Installation starts a new shell. We need to logout so the installation script can proceed.
+    logout
+fi
 
 # Install powerlevel10k theme
-echo "Installing powerlevel10 theme"
 if [ ! -d ~/.oh-my-zsh/themes/powerlevel10k ]; then
+    echo "Installing powerlevel10 theme"
     git clone https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/themes/powerlevel10k
 fi
 
@@ -48,7 +51,6 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/powerline/fonts/master/ins
 echo "Further configuration of the Powerline theme is done when starting Iterm"
 
 # Install other apps
-
 echo "Installing cask..."
 CASKS=(
     vlc
@@ -78,6 +80,7 @@ PACKAGES=(
     kubectx
     zsh-autosuggestions
     zsh-completions
+    dockutil
     readline
 )
 echo "Installing packages..."
@@ -91,7 +94,6 @@ echo 'export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources
 #source ~/.zshrc
 
 # Install Visual Studio Code extension
-# TODO: Extensions weren't installed.
 EXTENSIONS=(
     vscodevim.vim
     eamodio.gitlens
@@ -101,10 +103,11 @@ EXTENSIONS=(
     ms-azuretools.vscode-docker
 )
 
+# Visual Studio Code can't handle all extensions at once so we'll iterate over them one by one
 echo "Installing Visual Studio Code extensions"
-while IFS= read -r line; do
-    code --install-extension --force $line
-done <<< "$EXTENSIONS"
+for extension in "${EXTENSIONS[@]}"; do
+    code --install-extension --force "$extension"
+done
 
 # OSX modifications
 # TODO: Some of these need more work
@@ -114,6 +117,10 @@ echo "Applying OSX modifications"
 defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock autohide-delay -float 0
 defaults write com.apple.dock autohide-time-modifier -float 0
+
+# Enable Magnification
+defaults write com.apple.dock magnification -float 1
+
 # Set Dock icon size for magnification
 defaults write com.apple.dock largesize -int 64; killall Dock
 
@@ -126,11 +133,6 @@ defaults write com.google.Chrome AppleEnableSwipeNavigateWithScrolls -bool false
 # Setting screenshots location to ~/Desktop
 defaults write com.apple.screencapture location -string "$HOME/Desktop"
 
-# Enabling the Develop menu and the Web Inspector in Safari
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
-
 # Setting trackpad & mouse speed to a reasonable number
 defaults write -g com.apple.trackpad.scaling 2
 defaults write -g com.apple.mouse.scaling 2.5
@@ -138,6 +140,8 @@ defaults write -g com.apple.mouse.scaling 2.5
 # Configure keyboard speed settings
 defaults write -g InitialKeyRepeat -int 10
 defaults write -g KeyRepeat -int 1
+
+# TODO: Need to check keyboard and trackpad values as they are not yet where I want them.
 
 # Disable smart quotes and smart dashes as they are annoying when typing code
 defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
@@ -150,35 +154,21 @@ defaults write com.apple.dock mru-spaces -bool false
 defaults write com.apple.screensaver askForPassword 1
 defaults write com.apple.screensaver askForPasswordDelay 5
 
-# Default apps I want to have in my Dock. I might consider just using Dockutil for this at a later moment
-# https://github.com/kcrawford/dockutil
-# TODO: Dock seems not to be modified
-defaults delete com.apple.dock persistent-apps
-defaults delete com.apple.dock recent-apps
-defaults delete com.apple.dock persistent-others
-
-dock_persistent_apps() {
-    printf '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>%s</string><key>_CFURLStringType</key><integer>0</integer></dict></dict></dict>', "$1"
-}
-dock_persistent_others() {
-    printf '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>%s</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>title-type</key><string>directory-tile</string></dict>', "$1"
-}
-
-defaults write com.apple.dock persistent-apps -array \
-    "$(dock_persistent_apps /Applications/iTerm.app)" \
-    "$(dock_persistent_apps /Applications/Google\ Chrome.app)" \
-    "$(dock_persistent_apps /Applications/Safari.app)" \
-    "$(dock_persistent_apps /Applications/Visual\ Studio\ Code.app)" \
-    "$(dock_persistent_apps /Applications/Slack.app)" \
-    "$(dock_persistent_apps /System/Applications/Calendar.app)" \
-    "$(dock_persistent_apps /System/Applications/Notes.app)" \
-    "$(dock_persistent_apps /Applications/Spotify.app)"
-# I typically have Dock items for Applications, Downloads and Documents as well. This works, but the tile-type isn't the one I want. I looks like the default is file-tile.
-defaults write com.apple.dock persistent-others -array \
-    "$(dock_persistent_others /Applications/)" \
-    "$(dock_persistent_others ~/Downloads/)" \
-    "$(dock_persistent_others ~/Documents/)"
-killall Dock
+# Remove everything from dock
+dockutil --remove all
+# Default apps I want to have in my Dock.
+dockutil --add /Applications/iTerm.app
+dockutil --add /Applications/Google\ Chrome.app
+dockutil --add /Applications/Safari.app
+dockutil --add /Applications/Visual\ Studio\ Code.app
+dockutil --add /Applications/Slack.app
+dockutil --add /System/Applications/Calendar.app
+dockutil --add /System/Applications/Notes.app
+dockutil --add /Applications/Todoist.app
+dockutil --add /System/Applications/System\ Preferences.app
+dockutil --add /Applications/ --view grid
+dockutil --add ~/Downloads/ --view grid
+dockutil --add ~/Documents/ --view grid
 
 # Create aliases file with default shortcuts
 cat << EOF > ~/.aliases
